@@ -30,3 +30,8 @@ backend/check-student-user.js
 
 # Sensitive files
 loginPass.txt
+
+# Environment variables
+.env
+.env.local
+.env.*.local
