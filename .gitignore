@@ -27,3 +27,6 @@ dist-ssr
 backend/check-user.js
 backend/create-test-user.js
 backend/check-student-user.js
+
+# Sensitive files
+loginPass.txt

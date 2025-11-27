@@ -18,3 +18,4 @@ const Attendance = mongoose.model<IAttendance>("Attendance", AttendanceSchema);
 
 export default Attendance;
 
+

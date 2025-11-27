@@ -18,3 +18,4 @@ const Marks = mongoose.model<IMarks>("Marks", MarksSchema);
 
 export default Marks;
 
+
