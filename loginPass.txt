@@ -1,6 +1,0 @@
-username:student@gmail.com
-pass:student123
-
-username:teacher@gmail.com
-pass:teacher123
-
