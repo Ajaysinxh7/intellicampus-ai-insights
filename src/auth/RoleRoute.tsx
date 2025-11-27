@@ -1,0 +1,27 @@
+    import { ReactNode, useContext } from "react";
+    import { Navigate } from "react-router-dom";
+    import { AuthContext, AuthContextType } from "./AuthContext";
+
+    interface RoleRouteProps {
+    children: ReactNode;
+    role: string; // expected user role
+    }
+
+    const RoleRoute: React.FC<RoleRouteProps> = ({ children, role }) => {
+    const auth = useContext(AuthContext);
+
+    // If context is missing, block access
+    if (!auth) return <Navigate to="/login" replace />;
+
+    const { user } = auth;
+
+    // Not logged in → redirect to login
+    if (!user) return <Navigate to="/login" replace />;
+
+    // Logged in but wrong role → redirect to unauthorized page
+    if (user.role !== role) return <Navigate to="/unauthorized" replace />;
+
+    return children;
+    };
+
+    export default RoleRoute;

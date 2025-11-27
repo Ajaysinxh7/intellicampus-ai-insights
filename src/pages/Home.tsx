@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { NavLink } from "react-router-dom";
 import { Brain, TrendingUp, MessageSquare, BarChart3, ArrowRight } from "lucide-react";
 import FeatureCard from "@/components/FeatureCard";
-
+import Login from "./Login";
 const Home = () => {
   return (
     <div className="min-h-screen">
@@ -31,15 +31,10 @@ const Home = () => {
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-              <NavLink to="/features">
+              <NavLink to="/Login">
                 <Button size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-glow">
-                  Explore Features
+                  Login
                   <ArrowRight className="ml-2 h-5 w-5" />
-                </Button>
-              </NavLink>
-              <NavLink to="/demo">
-                <Button size="lg" variant="outline" className="border-border/40 hover:bg-card/50">
-                  View Demo
                 </Button>
               </NavLink>
             </div>
@@ -48,92 +43,13 @@ const Home = () => {
       </section>
 
       {/* Quick Features */}
-      <section className="py-20 container mx-auto px-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <FeatureCard
-            icon={BarChart3}
-            title="Attendance Tracking"
-            description="Real-time attendance monitoring with automatic calculations and predictions"
-          />
-          <FeatureCard
-            icon={TrendingUp}
-            title="Marks Analytics"
-            description="Comprehensive marks tracking with trend analysis and performance insights"
-          />
-          <FeatureCard
-            icon={MessageSquare}
-            title="AI Chatbot"
-            description="Natural language queries for instant access to your academic data"
-          />
-          <FeatureCard
-            icon={Brain}
-            title="ML Predictions"
-            description="Predict future attendance and marks using advanced machine learning models"
-          />
-        </div>
-      </section>
+      
 
       {/* AI Highlights Section */}
-      <section className="py-20 bg-card/30 border-y border-border/40">
-        <div className="container mx-auto px-4">
-          <div className="max-w-4xl mx-auto text-center space-y-6">
-            <h2 className="text-3xl md:text-4xl font-bold">
-              Powered by Advanced{" "}
-              <span className="bg-gradient-primary bg-clip-text text-transparent">
-                AI Technology
-              </span>
-            </h2>
-            <p className="text-lg text-muted-foreground">
-              IntelliCampus leverages cutting-edge machine learning models, RAG (Retrieval-Augmented Generation), 
-              and LLM function calling to provide intelligent, context-aware responses to your academic queries.
-            </p>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 pt-8">
-              <div className="space-y-2">
-                <div className="text-4xl font-bold text-primary">75%</div>
-                <p className="text-sm text-muted-foreground">
-                  Auto-calculate classes needed to reach attendance threshold
-                </p>
-              </div>
-              <div className="space-y-2">
-                <div className="text-4xl font-bold text-primary">RAG</div>
-                <p className="text-sm text-muted-foreground">
-                  Retrieval-Augmented Generation for accurate, context-aware responses
-                </p>
-              </div>
-              <div className="space-y-2">
-                <div className="text-4xl font-bold text-primary">ML</div>
-                <p className="text-sm text-muted-foreground">
-                  Machine Learning models for attendance and marks prediction
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+      
 
       {/* CTA Section */}
-      <section className="py-20 container mx-auto px-4">
-        <div className="max-w-3xl mx-auto text-center space-y-6 p-8 rounded-2xl bg-gradient-primary/10 border border-primary/20">
-          <h2 className="text-3xl md:text-4xl font-bold">
-            Ready to Experience IntelliCampus?
-          </h2>
-          <p className="text-lg text-muted-foreground">
-            Explore our comprehensive documentation, try the demo, or get in touch with us
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <NavLink to="/architecture">
-              <Button size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground">
-                View Architecture
-              </Button>
-            </NavLink>
-            <NavLink to="/contact">
-              <Button size="lg" variant="outline" className="border-border/40">
-                Contact Us
-              </Button>
-            </NavLink>
-          </div>
-        </div>
-      </section>
+      
     </div>
   );
 };
