@@ -5,7 +5,8 @@ import axios, {
 } from "axios";
 
 const api = axios.create({
-    baseURL: import.meta.env.VITE_API_BASE_URL || "http://localhost:8083/api",
+    // baseURL: import.meta.env.VITE_API_BASE_URL || "http://localhost:8083/api",
+    baseURL: "http://localhost:8083/api",
     withCredentials: true,
 });
 
@@ -37,7 +38,7 @@ api.interceptors.response.use(
 
             try {
                 const refreshRes = await axios.post(
-                    "http://localhost:8080/api/refresh-token",
+                    "http://localhost:8083/api/refresh-token",
                     {},
                     { withCredentials: true }
                 );

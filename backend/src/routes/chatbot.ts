@@ -183,8 +183,17 @@ router.post("/", verifyAccessToken, async (req: Request, res: Response) => {
     // 👨‍🎓 STUDENT MODE
     // ---------------------------------------------------------
     else {
+      const userDetails = await (await import("../models/User")).default.findById(userId);
+
       studentContext = {
         role: "student",
+        profile: {
+          name: userDetails?.name || "N/A",
+          email: userDetails?.email || "N/A",
+          enrollmentNumber: userDetails?.enrollmentNumber || "N/A",
+          branch: userDetails?.branch || "N/A",
+          collegeName: userDetails?.collegeName || "N/A",
+        },
         attendance: attendanceData.map(a => ({
           subject: a.subject,
           attended: a.attendedClasses,
@@ -205,16 +214,17 @@ router.post("/", verifyAccessToken, async (req: Request, res: Response) => {
       systemInstruction = `
         You are an intelligent and helpful academic assistant for a student.
         
-        Here is the student's current academic data and Predictive Models:
+        Here is the student's current academic data, Profile, and Predictive Models:
         ${JSON.stringify(studentContext, null, 2)}
   
         Student's Query: "${message}"
   
         Instructions:
         1. Analyze the student's data to answer their query accurately.
-        2. If they ask about attendance, mention their current percentage and how many classes they need to attend (if applicable) to reach 75%.
-        3. If they ask about marks, provide their scores and averages.
-        4. **Predictive Performance**:
+        2. **Profile Details**: If the student asks for their details, profile, or "who am I", display their Name, Enrollment Number, Branch, and College Name clearly from the 'profile' section.
+        3. If they ask about attendance, mention their current percentage and how many classes they need to attend (if applicable) to reach 75%.
+        4. If they ask about marks, provide their scores and averages.
+        5. **Predictive Performance**:
            - You possess linear regression models in 'predictionModels' for various subjects (slope & intercept).
            - If the student asks to "predict my grade", "what will I score", or "how to improve" for a specific subject:
               a. Find the matching Subject in the student's Attendance data.
@@ -223,12 +233,12 @@ router.post("/", verifyAccessToken, async (req: Request, res: Response) => {
               d. Present the *Predicted Grade* clearly.
               e. Also calculate the "Insight": What if they increase attendance by 10%? (Use same formula with current_attendance + 10). Tell them the potential gain.
            - If the subject is not found in 'predictionModels', politely say you don't have enough historical data for that subject yet.
-        5. Be encouraging and constructive.
-        6. **IMPORTANT OUTPUT RULE**: Do NOT show the internal formula (slope/intercept) or the mathematical calculation steps in your response. Just state the final result naturally. 
+        6. Be encouraging and constructive.
+        7. **IMPORTANT OUTPUT RULE**: Do NOT show the internal formula (slope/intercept) or the mathematical calculation steps in your response. Just state the final result naturally. 
            - BAD: "Your grade is calculated as (0.8 * 50) + 10 = 50."
            - GOOD: "Based on your current attendance, your predicted grade is approximately 50%."
-        7. Keep the response concise, natural, and conversational. Do not use markdown tables, use bullet points if listing items.
-        8. If the query is unrelated to their data (e.g., "Hello", "Who are you"), respond politely as an AI assistant.
+        8. Keep the response concise, natural, and conversational. Do not use markdown tables, use bullet points if listing items.
+        9. If the query is unrelated to their data (e.g., "Hello", "Who are you"), respond politely as an AI assistant.
       `;
     }
 

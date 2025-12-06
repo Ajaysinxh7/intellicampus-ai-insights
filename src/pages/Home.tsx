@@ -67,11 +67,6 @@ const Home = () => {
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
               </NavLink>
-              <NavLink to="/features">
-                <Button size="lg" variant="outline" className="bg-background/50 backdrop-blur border-primary/20 hover:bg-accent">
-                  Learn More
-                </Button>
-              </NavLink>
             </div>
           </div>
         </div>
@@ -142,12 +137,12 @@ const Home = () => {
                 ))}
               </div>
 
-              <NavLink to="/ml-design">
+              {/* <NavLink to="/ml-design">
                 <Button className="mt-4" variant="secondary">
                   Explore AI Architecture
                   <ArrowRight className="ml-2 w-4 h-4" />
                 </Button>
-              </NavLink>
+              </NavLink> */}
             </div>
 
             <div className="relative">
@@ -166,35 +161,6 @@ const Home = () => {
                 <div className="h-48 w-full bg-accent/50 rounded-lg flex items-center justify-center border border-border/50">
                   <BarChart3 className="w-16 h-16 text-muted-foreground/50" />
                 </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="py-20">
-        <div className="container mx-auto px-4">
-          <div className="relative rounded-3xl overflow-hidden bg-primary px-6 py-16 md:px-16 md:py-20 text-center">
-            <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHZpZXdCb3g9IjAgMCAyMCAyMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSIjZmZmIiBmaWxsLW9wYWNpdHk9IjAuMDUiPjxjaXJjbGUgY3g9IjEiIGN5PSIxIiByPSIxIi8+PC9nPjwvc3ZnPg==')] opacity-30"></div>
-            <div className="relative z-10 max-w-3xl mx-auto space-y-8">
-              <h2 className="text-3xl md:text-5xl font-bold text-primary-foreground">
-                Ready to Transform Your Institution?
-              </h2>
-              <p className="text-xl text-primary-foreground/80">
-                Join the future of education management with IntelliCampus.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <NavLink to="/contact">
-                  <Button size="lg" variant="secondary" className="w-full sm:w-auto font-semibold">
-                    Get Started Now
-                  </Button>
-                </NavLink>
-                <NavLink to="/demo">
-                  <Button size="lg" variant="outline" className="w-full sm:w-auto border-primary-foreground/20 text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground">
-                    View Demo
-                  </Button>
-                </NavLink>
               </div>
             </div>
           </div>

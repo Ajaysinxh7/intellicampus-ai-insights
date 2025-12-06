@@ -8,6 +8,50 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
+    /* Light Mode Colors */
+    --background: 0 0% 100%;
+    --foreground: 222 47% 11%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+
+    --primary: 239 84% 67%;
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 271 81% 67%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+
+    --accent: 239 84% 67%;
+    --accent-foreground: 222 47% 11%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 239 84% 67%;
+
+    --radius: 0.75rem;
+
+    /* Custom AI theme colors (Light) */
+    --primary-glow: 239 100% 85%;
+    --secondary-glow: 271 100% 85%;
+    --gradient-primary: linear-gradient(135deg, hsl(239 84% 67%), hsl(271 81% 67%));
+    --gradient-hero: linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(239 40% 95%) 100%);
+    --glow-shadow: 0 0 40px hsl(239 84% 67% / 0.2);
+    --card-glow: 0 4px 24px hsl(239 84% 67% / 0.1);
+
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .dark {
+    /* Dark Mode Colors (Original) */
     --background: 220 25% 6%;
     --foreground: 210 40% 98%;
 
@@ -36,18 +80,13 @@ All colors MUST be HSL.
     --input: 220 15% 20%;
     --ring: 239 84% 67%;
 
-    --radius: 0.75rem;
-
-    /* Custom AI theme colors */
+    /* Custom AI theme colors (Dark) */
     --primary-glow: 239 100% 80%;
     --secondary-glow: 271 100% 80%;
     --gradient-primary: linear-gradient(135deg, hsl(239 84% 67%), hsl(271 81% 67%));
     --gradient-hero: linear-gradient(180deg, hsl(220 25% 6%) 0%, hsl(239 40% 15%) 100%);
     --glow-shadow: 0 0 40px hsl(239 84% 67% / 0.3);
     --card-glow: 0 4px 24px hsl(239 84% 67% / 0.1);
-    
-    /* Transitions */
-    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 }
 
@@ -59,4 +98,36 @@ All colors MUST be HSL.
   body {
     @apply bg-background text-foreground;
   }
+}
+
+@layer utilities {
+  .animation-delay-2000 {
+    animation-delay: 2s;
+  }
+
+  .animation-delay-4000 {
+    animation-delay: 4s;
+  }
+}
+
+@keyframes blob {
+  0% {
+    transform: translate(0px, 0px) scale(1);
+  }
+
+  33% {
+    transform: translate(30px, -50px) scale(1.1);
+  }
+
+  66% {
+    transform: translate(-20px, 20px) scale(0.9);
+  }
+
+  100% {
+    transform: translate(0px, 0px) scale(1);
+  }
+}
+
+.animate-blob {
+  animation: blob 7s infinite;
 }

@@ -1,5 +1,5 @@
 import { Brain, Github, Linkedin, Mail } from "lucide-react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useLocation } from "react-router-dom";
 
 const Footer = () => {
   return (
@@ -22,9 +22,9 @@ const Footer = () => {
 
           {/* Navigation */}
           <div className="flex items-center gap-8">
-            <NavLink to="/" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors hover:scale-105 transform duration-200">
+            {/* <NavLink to="/" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors hover:scale-105 transform duration-200">
               Home
-            </NavLink>
+            </NavLink> */}
             {/* Add more links here if needed */}
           </div>
 

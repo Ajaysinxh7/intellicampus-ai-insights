@@ -17,6 +17,7 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
+import { ThemeProvider } from "./components/theme-provider";
 // ⭐ ADDED (AUTH SYSTEM IMPORTS)
 import { AuthProvider } from "./auth/AuthContext";
 import PrivateRoute from "./auth/PrivateRoute";
@@ -27,6 +28,10 @@ import StudentPanel from "./pages/StudentPanel";
 import TeacherPanel from "./pages/TeacherPanel";
 import TeacherRiskDashboard from "./pages/TeacherRiskDashboard";
 import AdminPanel from "./pages/AdminPanel";
+
+import StudentLayout from "./components/layouts/StudentLayout";
+import AttendancePage from "./pages/student/AttendancePage";
+import MarksPage from "./pages/student/MarksPage";
 
 import { useEffect } from "react";
 
@@ -51,88 +56,94 @@ const App = () => (
   // ⭐ ADDED AuthProvider (wraps whole app)
   <AuthProvider>
     <GlobalReloadWarning />
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <div className="flex flex-col min-h-screen">
-            <Navbar />
-            <main className="flex-1">
-              <Routes>
+    <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <div className="flex flex-col min-h-screen">
+              <Navbar />
+              <main className="flex-1 flex flex-col">
+                <Routes>
 
-                {/* ---------------------------- */}
-                {/* ⭐ YOUR ORIGINAL ROUTES BELOW */}
-                {/* ---------------------------- */}
-                <Route path="/" element={<Home />} />
-                <Route path="/features" element={<Features />} />
-                <Route path="/architecture" element={<SystemArchitecture />} />
-                <Route path="/api" element={<APIDocs />} />
-                <Route path="/ml-design" element={<MLDesign />} />
-                <Route path="/demo" element={<DemoDashboard />} />
-                <Route path="/contact" element={<Contact />} />
+                  {/* ---------------------------- */}
+                  {/* ⭐ YOUR ORIGINAL ROUTES BELOW */}
+                  {/* ---------------------------- */}
+                  <Route path="/" element={<Home />} />
+                  <Route path="/features" element={<Features />} />
+                  <Route path="/architecture" element={<SystemArchitecture />} />
+                  <Route path="/api" element={<APIDocs />} />
+                  <Route path="/ml-design" element={<MLDesign />} />
+                  <Route path="/demo" element={<DemoDashboard />} />
+                  <Route path="/contact" element={<Contact />} />
 
-                {/* ⭐ YOUR LOGIN PAGE */}
-                <Route path="/login" element={<Login />} />
+                  {/* ⭐ YOUR LOGIN PAGE */}
+                  <Route path="/login" element={<Login />} />
 
-                {/* ⭐ ADDED – STUDENT ROUTE */}
-                <Route
-                  path="/student"
-                  element={
-                    <PrivateRoute>
-                      <RoleRoute role="student">
-                        <StudentPanel />
-                      </RoleRoute>
-                    </PrivateRoute>
-                  }
-                />
+                  {/* ⭐ ADDED – STUDENT ROUTE */}
+                  <Route
+                    path="/student"
+                    element={
+                      <PrivateRoute>
+                        <RoleRoute role="student">
+                          <StudentLayout />
+                        </RoleRoute>
+                      </PrivateRoute>
+                    }
+                  >
+                    <Route index element={<StudentPanel />} />
+                    <Route path="attendance" element={<AttendancePage />} />
+                    <Route path="marks" element={<MarksPage />} />
+                  </Route>
 
 
 
-                {/* ⭐ ADDED – TEACHER ROUTE */}
-                <Route
-                  path="/teacher"
-                  element={
-                    <PrivateRoute>
-                      <RoleRoute role="teacher">
-                        <TeacherPanel />
-                      </RoleRoute>
-                    </PrivateRoute>
-                  }
-                />
-                <Route
-                  path="/teacher/risk"
-                  element={
-                    <PrivateRoute>
-                      <RoleRoute role="teacher">
-                        <TeacherRiskDashboard />
-                      </RoleRoute>
-                    </PrivateRoute>
-                  }
-                />
+                  {/* ⭐ ADDED – TEACHER ROUTE */}
+                  <Route
+                    path="/teacher"
+                    element={
+                      <PrivateRoute>
+                        <RoleRoute role="teacher">
+                          <TeacherPanel />
+                        </RoleRoute>
+                      </PrivateRoute>
+                    }
+                  />
+                  <Route
+                    path="/teacher/risk"
+                    element={
+                      <PrivateRoute>
+                        <RoleRoute role="teacher">
+                          <TeacherRiskDashboard />
+                        </RoleRoute>
+                      </PrivateRoute>
+                    }
+                  />
 
-                {/* ⭐ ADDED – ADMIN ROUTE */}
-                <Route
-                  path="/admin"
-                  element={
-                    <PrivateRoute>
-                      <RoleRoute role="admin">
-                        <AdminPanel />
-                      </RoleRoute>
-                    </PrivateRoute>
-                  }
-                />
+                  {/* ⭐ ADDED – ADMIN ROUTE */}
+                  <Route
+                    path="/admin"
+                    element={
+                      <PrivateRoute>
+                        <RoleRoute role="admin">
+                          <AdminPanel />
+                        </RoleRoute>
+                      </PrivateRoute>
+                    }
+                  />
 
-                {/* ⭐ 404 PAGE */}
-                <Route path="*" element={<NotFound />} />
+                  {/* ⭐ 404 PAGE */}
+                  <Route path="*" element={<NotFound />} />
 
-              </Routes>
-            </main>
-            <Footer />
-          </div>
-        </BrowserRouter>
-      </TooltipProvider>
-    </QueryClientProvider>
+                </Routes>
+              </main>
+              <Footer />
+            </div>
+          </BrowserRouter>
+        </TooltipProvider>
+      </QueryClientProvider>
+    </ThemeProvider>
   </AuthProvider>
 );
 

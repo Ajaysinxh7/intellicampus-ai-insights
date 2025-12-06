@@ -1,44 +1,48 @@
-    import React, {
+import React, {
     createContext,
     ReactNode,
     useState,
     useEffect,
-    } from "react";
-    import api from "../api/axios";
+} from "react";
+import api from "../api/axios";
 
-    // ----------------------------
-    // ⭐ Type Definitions
-    // ----------------------------
+// ----------------------------
+// ⭐ Type Definitions
+// ----------------------------
 
-    // User object shape
-    export interface User {
+// User object shape
+export interface User {
     id: string;
     email: string;
     role: string | null;
     accessToken: string;
-    }
+    name?: string;
+    enrollmentNumber?: string;
+    branch?: string;
+    collegeName?: string;
+}
 
-    // Context value shape
-    export interface AuthContextType {
+// Context value shape
+export interface AuthContextType {
     user: User | null;
     login: (email: string, password: string) => Promise<User>;
     logout: () => void;
-    }
+}
 
-    // Provider props type
-    interface AuthProviderProps {
+// Provider props type
+interface AuthProviderProps {
     children: ReactNode;
-    }
+}
 
-    // ----------------------------
-    // ⭐ Create Context
-    // ----------------------------
-    export const AuthContext = createContext<AuthContextType | null>(null);
+// ----------------------------
+// ⭐ Create Context
+// ----------------------------
+export const AuthContext = createContext<AuthContextType | null>(null);
 
-    // ----------------------------
-    // ⭐ Provider Component
-    // ----------------------------
-    export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
+// ----------------------------
+// ⭐ Provider Component
+// ----------------------------
+export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const [user, setUser] = useState<User | null>(null);
 
     // ----------------------------
@@ -54,8 +58,8 @@
         localStorage.setItem("user", JSON.stringify(userData));
 
         const user: User = {
-        ...userData,
-        accessToken,
+            ...userData,
+            accessToken,
         };
 
         setUser(user);
@@ -80,20 +84,24 @@
         const savedUser = localStorage.getItem("user");
 
         if (token && savedUser) {
-        const parsed = JSON.parse(savedUser);
+            const parsed = JSON.parse(savedUser);
 
-        setUser({
-            id: parsed.id,
-            email: parsed.email,
-            role: parsed.role,
-            accessToken: token,
-        });
+            setUser({
+                id: parsed.id,
+                email: parsed.email,
+                role: parsed.role,
+                accessToken: token,
+                name: parsed.name,
+                enrollmentNumber: parsed.enrollmentNumber,
+                branch: parsed.branch,
+                collegeName: parsed.collegeName,
+            });
         }
     }, []);
 
     return (
         <AuthContext.Provider value={{ user, login, logout }}>
-        {children}
+            {children}
         </AuthContext.Provider>
     );
-    };
+};

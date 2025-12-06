@@ -8,6 +8,7 @@ import marksRoutes from "./routes/marks";
 import chatbotRoutes from "./routes/chatbot";
 import usersRoutes from "./routes/users";
 import riskRoutes from "./routes/risk";
+import adminRoutes from "./routes/admin";
 
 import { verifyAccessToken } from "./middleware/auth";
 import connectDB from "./utils/db";
@@ -41,6 +42,7 @@ app.use("/api/marks", marksRoutes);
 app.use("/api/chatbot", chatbotRoutes);
 app.use("/api/users", usersRoutes);
 app.use("/api/risk", riskRoutes);
+app.use("/api/admin", adminRoutes);
 
 
 app.get("/api/protected", verifyAccessToken, (req, res) => {

@@ -49,7 +49,7 @@ router.post("/login", async (req: Request, res: Response) => {
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
-    const accessToken = generateAccessToken(user._id.toString());
+    const accessToken = generateAccessToken(user._id.toString(), user.role);
     const refreshToken = generateRefreshToken(user._id.toString());
 
     res.cookie("refreshToken", refreshToken, {
@@ -64,11 +64,38 @@ router.post("/login", async (req: Request, res: Response) => {
         id: user._id,
         email: user.email,
         role: user.role,
+        name: user.name,
+        enrollmentNumber: user.enrollmentNumber,
+        branch: user.branch,
+        collegeName: user.collegeName,
       },
     });
   } catch (error) {
     console.error("Login error:", error);
     return res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+router.post("/refresh-token", async (req: Request, res: Response) => {
+  try {
+    const refreshToken = req.cookies.refreshToken;
+    if (!refreshToken) {
+      return res.status(401).json({ message: "Refresh Token Required" });
+    }
+
+    const decoded = jwt.verify(refreshToken, process.env.REFRESH_SECRET!) as { userId: string };
+    const user = await User.findById(decoded.userId);
+
+    if (!user) {
+      return res.status(403).json({ message: "User not found" });
+    }
+
+    const accessToken = generateAccessToken(user._id.toString(), user.role);
+
+    return res.json({ accessToken });
+  } catch (error) {
+    console.error("Refresh token error:", error);
+    return res.status(403).json({ message: "Invalid Refresh Token" });
   }
 });
 
