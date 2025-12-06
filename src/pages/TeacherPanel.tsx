@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useContext, FormEvent } from "react";
+import { Link } from "react-router-dom";
 import { AuthContext } from "../auth/AuthContext";
 import api from "../api/axios";
 
@@ -112,7 +113,7 @@ const TeacherPanel: React.FC = () => {
 
       alert("Attendance saved successfully!");
       setAttendanceForm({ subject: "", totalClasses: "", attendedClasses: "" });
-      
+
       // Refresh student data
       if (selectedStudent) {
         fetchStudentData(selectedStudent.id);
@@ -122,6 +123,49 @@ const TeacherPanel: React.FC = () => {
       alert(error.response?.data?.message || "Failed to save attendance. Please try again.");
     } finally {
       setSaving(false);
+    }
+  };
+
+
+
+  // Chatbot State
+  const [chatMessage, setChatMessage] = useState("");
+  const [chatHistory, setChatHistory] = useState<
+    Array<{ type: "user" | "bot"; message: string }>
+  >([]);
+  const [chatLoading, setChatLoading] = useState(false);
+
+  const handleChatSubmit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!chatMessage.trim() || !user?.id || chatLoading) return;
+
+    const userMessage = chatMessage.trim();
+    setChatMessage("");
+    setChatHistory((prev) => [...prev, { type: "user", message: userMessage }]);
+    setChatLoading(true);
+
+    try {
+      const response = await api.post("/chatbot", {
+        userId: user.id,
+        message: userMessage,
+        targetStudentId: selectedStudent?.id // Pass selected student ID if available
+      });
+
+      setChatHistory((prev) => [
+        ...prev,
+        { type: "bot", message: response.data.reply },
+      ]);
+    } catch (error) {
+      console.error("Chatbot error:", error);
+      setChatHistory((prev) => [
+        ...prev,
+        {
+          type: "bot",
+          message: "Sorry, I encountered an error. Please try again.",
+        },
+      ]);
+    } finally {
+      setChatLoading(false);
     }
   };
 
@@ -143,7 +187,7 @@ const TeacherPanel: React.FC = () => {
 
       alert("Marks saved successfully!");
       setMarksForm({ subject: "", marksObtained: "", totalMarks: "" });
-      
+
       // Refresh student data
       if (selectedStudent) {
         fetchStudentData(selectedStudent.id);
@@ -159,9 +203,21 @@ const TeacherPanel: React.FC = () => {
   return (
     <div className="min-h-screen bg-gradient-hero p-6">
       <div className="max-w-7xl mx-auto">
-        <h1 className="text-4xl font-bold text-white mb-8 bg-gradient-primary bg-clip-text text-transparent">
-          Teacher Dashboard
-        </h1>
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+          <h1 className="text-4xl font-bold text-white bg-gradient-primary bg-clip-text text-transparent">
+            Teacher Dashboard
+          </h1>
+          <Link
+            to="/teacher/risk"
+            className="flex items-center gap-2 px-6 py-3 bg-red-500/10 hover:bg-red-500/20 border border-red-500/50 rounded-xl transition-all group"
+          >
+            <span className="text-2xl group-hover:scale-110 transition-transform">🚨</span>
+            <div className="text-left">
+              <p className="text-red-400 font-bold text-sm">Early Warning System</p>
+              <p className="text-red-300/60 text-xs">View At-Risk Students</p>
+            </div>
+          </Link>
+        </div>
 
         {/* Student Selection */}
         <div className="bg-card/40 backdrop-blur-xl border border-border/40 rounded-2xl shadow-xl p-6 mb-6">
@@ -328,13 +384,12 @@ const TeacherPanel: React.FC = () => {
                             <td className="text-right p-3">{item.totalClasses}</td>
                             <td className="text-right p-3">
                               <span
-                                className={`font-semibold ${
-                                  item.percentage >= 75
-                                    ? "text-green-400"
-                                    : item.percentage >= 60
+                                className={`font-semibold ${item.percentage >= 75
+                                  ? "text-green-400"
+                                  : item.percentage >= 60
                                     ? "text-yellow-400"
                                     : "text-red-400"
-                                }`}
+                                  }`}
                               >
                                 {item.percentage}%
                               </span>
@@ -378,13 +433,12 @@ const TeacherPanel: React.FC = () => {
                             <td className="text-right p-3">{item.totalMarks}</td>
                             <td className="text-right p-3">
                               <span
-                                className={`font-semibold ${
-                                  item.percentage >= 75
-                                    ? "text-green-400"
-                                    : item.percentage >= 60
+                                className={`font-semibold ${item.percentage >= 75
+                                  ? "text-green-400"
+                                  : item.percentage >= 60
                                     ? "text-yellow-400"
                                     : "text-red-400"
-                                }`}
+                                  }`}
                               >
                                 {item.percentage}%
                               </span>
@@ -399,6 +453,80 @@ const TeacherPanel: React.FC = () => {
             </div>
           </>
         )}
+        {/* AI Chatbot Section */}
+        <div className="bg-card/40 backdrop-blur-xl border border-border/40 rounded-2xl shadow-xl p-6 mt-8">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="h-10 w-10 rounded-lg bg-primary/20 flex items-center justify-center text-primary">
+              🤖
+            </div>
+            <div>
+              <h2 className="text-2xl font-semibold text-white">AI Teaching Assistant</h2>
+              <p className="text-gray-400 text-sm">Ask about class performance or student risk analysis</p>
+            </div>
+          </div>
+
+          {/* Chat History */}
+          <div className="bg-black/20 rounded-xl p-4 mb-4 h-64 overflow-y-auto border border-border/10 custom-scrollbar">
+            {chatHistory.length === 0 ? (
+              <div className="h-full flex flex-col items-center justify-center text-gray-500 space-y-2">
+                <p>👋 Hi {user?.email ? user.email.split("@")[0] : "Teacher"}!</p>
+                <p className="text-sm text-center max-w-md">
+                  I can help you analyze class performance, identify at-risk students, or suggest improvements.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {chatHistory.map((chat, index) => (
+                  <div
+                    key={index}
+                    className={`flex ${chat.type === "user" ? "justify-end" : "justify-start"
+                      }`}
+                  >
+                    <div
+                      className={`max-w-[85%] rounded-2xl p-4 shadow-sm ${chat.type === "user"
+                        ? "bg-primary text-primary-foreground rounded-tr-none"
+                        : "bg-card/80 text-white border border-border/20 rounded-tl-none"
+                        }`}
+                    >
+                      <p className="whitespace-pre-wrap text-sm leading-relaxed">{chat.message}</p>
+                    </div>
+                  </div>
+                ))}
+                {chatLoading && (
+                  <div className="flex justify-start">
+                    <div className="bg-card/80 text-white border border-border/20 rounded-2xl rounded-tl-none p-4 flex items-center gap-2">
+                      <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: "0s" }}></div>
+                      <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: "0.2s" }}></div>
+                      <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: "0.4s" }}></div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Chat Input */}
+          <form onSubmit={handleChatSubmit} className="relative">
+            <input
+              value={chatMessage}
+              onChange={(e) => setChatMessage(e.target.value)}
+              placeholder="Type your message..."
+              className="w-full pl-4 pr-32 py-4 rounded-xl bg-black/20 border border-border/40 text-white focus:outline-none focus:ring-2 focus:ring-primary/50 placeholder:text-gray-500 transition-all"
+              disabled={chatLoading}
+            />
+            <button
+              type="submit"
+              disabled={!chatMessage.trim() || chatLoading}
+              className="absolute right-2 top-2 bottom-2 px-6 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center"
+            >
+              {chatLoading ? (
+                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+              ) : (
+                "Send"
+              )}
+            </button>
+          </form>
+        </div>
       </div>
     </div>
   );

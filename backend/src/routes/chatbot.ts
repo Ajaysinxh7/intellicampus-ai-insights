@@ -1,18 +1,27 @@
 import { Router, Request, Response } from "express";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import Attendance from "../models/Attendance";
 import Marks from "../models/Marks";
+import { HistoricalPerformance } from "../models/HistoricalPerformance"; // Import HistoricalPerformance
 import { verifyAccessToken } from "../middleware/auth";
 import { classesNeeded } from "../utils/calcAttendance";
+import { calculateRegression } from "../utils/analytics"; // Import regression utility
 
 const router = Router();
 
 router.post("/", verifyAccessToken, async (req: Request, res: Response) => {
   try {
+    // Initialize Gemini API lazily to ensure env vars are loaded
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
+
     const { userId, message } = req.body;
     const authenticatedUserId = (req as any).user.userId;
 
     // Ensure user can only access their own data
-    if (userId !== authenticatedUserId) {
+    // Ensure user can only access their own data IF they are a student
+    // Teachers/Admins can access this route freely
+    // userRole is declared below, let's move it up or just use (req as any).user.role directly for this early check
+    if ((req as any).user.role === 'student' && userId !== authenticatedUserId) {
       return res.status(403).json({ message: "Access denied" });
     }
 
@@ -20,176 +29,224 @@ router.post("/", verifyAccessToken, async (req: Request, res: Response) => {
       return res.status(400).json({ message: "Message is required" });
     }
 
+    if (!process.env.GEMINI_API_KEY) {
+      console.error("GEMINI_API_KEY is missing in environment variables.");
+      return res.status(500).json({
+        reply: "I'm currently unable to process complex queries. Please contact the administrator to configure my AI brain (API Key missing)."
+      });
+    }
+
     // Fetch all attendance and marks for the user
     const attendanceData = await Attendance.find({ userId });
     const marksData = await Marks.find({ userId });
 
-    const messageLower = message.toLowerCase();
+    // Fetch Historical Data for Prediction
+    // We fetch all records to build models for available subjects
+    const historicalData = await HistoricalPerformance.find({});
 
-    // Analyze message and generate response
-    let reply = "";
-
-    // Check for attendance-related queries
-    if (messageLower.includes("attendance") || messageLower.includes("class")) {
-      const subjectsBelow75 = attendanceData
-        .map((item) => {
-          const percentage =
-            item.totalClasses > 0
-              ? (item.attendedClasses / item.totalClasses) * 100
-              : 0;
-          return {
-            subject: item.subject,
-            percentage: Math.round(percentage * 100) / 100,
-            attended: item.attendedClasses,
-            total: item.totalClasses,
-          };
-        })
-        .filter((item) => item.percentage < 75);
-
-      if (subjectsBelow75.length > 0) {
-        reply = "Subjects below 75% attendance:\n";
-        subjectsBelow75.forEach((item) => {
-          const needed = classesNeeded(item.attended, item.total, 75);
-          reply += `• ${item.subject}: ${item.percentage}% (${item.attended}/${item.total} classes). `;
-          if (needed > 0) {
-            reply += `Attend ${needed} more class${needed > 1 ? "es" : ""} to reach 75%.\n`;
-          } else {
-            reply += "Already at or above 75%.\n";
-          }
-        });
-      } else {
-        reply = "Great! All your subjects have 75% or higher attendance.";
+    // Group historical data by subject
+    const subjectHistory: { [key: string]: any[] } = {};
+    historicalData.forEach(record => {
+      if (!subjectHistory[record.subject]) {
+        subjectHistory[record.subject] = [];
       }
-    }
-    // Check for specific subject query (e.g., "How many classes do I need in DBMS?")
-    else if (
-      messageLower.includes("need") ||
-      messageLower.includes("how many") ||
-      messageLower.includes("75")
-    ) {
-      // Try to extract subject name from message
-      const subjects = attendanceData.map((a) => a.subject.toLowerCase());
-      const mentionedSubject = subjects.find((subj) =>
-        messageLower.includes(subj)
-      );
+      subjectHistory[record.subject].push(record);
+    });
 
-      if (mentionedSubject) {
-        const attendance = attendanceData.find(
-          (a) => a.subject.toLowerCase() === mentionedSubject
-        );
-        if (attendance) {
-          const percentage =
-            attendance.totalClasses > 0
-              ? (attendance.attendedClasses / attendance.totalClasses) * 100
-              : 0;
-          const needed = classesNeeded(
-            attendance.attendedClasses,
-            attendance.totalClasses,
-            75
-          );
-          const subjectName = attendance.subject;
-          reply = `You currently have ${Math.round(percentage * 100) / 100}% attendance in ${subjectName} (${attendance.attendedClasses}/${attendance.totalClasses} classes). `;
-          if (needed > 0) {
-            reply += `Attend ${needed} more class${needed > 1 ? "es" : ""} to reach 75%.`;
-          } else {
-            reply += "You've already reached 75% attendance!";
-          }
-        } else {
-          reply = `No attendance data found for ${mentionedSubject}.`;
+    // Calculate regression models for each subject
+    const predictionModels: { [key: string]: { slope: number, intercept: number } } = {};
+    for (const subject in subjectHistory) {
+      predictionModels[subject] = calculateRegression(subjectHistory[subject]);
+    }
+
+    // Prepare context data for the AI
+    let studentContext: any = {};
+    let systemInstruction = "";
+
+    const userRole = (req as any).user.role;
+
+    // ---------------------------------------------------------
+    // 👩‍🏫 TEACHER MODE
+    // ---------------------------------------------------------
+    if (userRole === 'teacher' || userRole === 'admin') {
+      // 1. Fetch all students
+      const students = await (await import("../models/User")).default.find({ role: "student" });
+      const totalStudents = students.length;
+
+      // 2. Fetch all academic data
+      const allAttendance = await Attendance.find({});
+      const allMarks = await Marks.find({});
+
+      // 3. Calculate Class Averages
+      let totalAttendancePct = 0;
+      let totalAttendanceCount = 0;
+      allAttendance.forEach(a => {
+        if (a.totalClasses > 0) {
+          totalAttendancePct += (a.attendedClasses / a.totalClasses) * 100;
+          totalAttendanceCount++;
         }
-      } else {
-        // General query about classes needed
-        const allSubjects = attendanceData.map((item) => {
-          const percentage =
-            item.totalClasses > 0
-              ? (item.attendedClasses / item.totalClasses) * 100
-              : 0;
-          const needed = classesNeeded(
-            item.attendedClasses,
-            item.totalClasses,
-            75
-          );
-          return {
-            subject: item.subject,
-            percentage: Math.round(percentage * 100) / 100,
-            needed,
-          };
-        });
+      });
+      const avgClassAttendance = totalAttendanceCount > 0 ? Math.round(totalAttendancePct / totalAttendanceCount) : 0;
 
-        reply = "Classes needed to reach 75% attendance:\n";
-        allSubjects.forEach((item) => {
-          if (item.needed > 0) {
-            reply += `• ${item.subject}: ${item.needed} more class${item.needed > 1 ? "es" : ""} (currently ${item.percentage}%)\n`;
-          } else {
-            reply += `• ${item.subject}: Already at or above 75% (${item.percentage}%)\n`;
+      let totalMarksPct = 0;
+      let totalMarksCount = 0;
+      allMarks.forEach(m => {
+        if (m.totalMarks > 0) {
+          totalMarksPct += (m.marksObtained / m.totalMarks) * 100;
+          totalMarksCount++;
+        }
+      });
+      const avgClassMarks = totalMarksCount > 0 ? Math.round(totalMarksPct / totalMarksCount) : 0;
+
+      // 4. Identify At-Risk Students (Simple Count)
+      // We'll use a simplified check here to avoid heavy processing, or just pass averages
+      // For more detail, we could list specific failing students, but let's start with summary.
+
+      // 4. Check if a specific student is selected for analysis
+      const { targetStudentId } = req.body;
+
+      if (targetStudentId) {
+        // Teacher is asking about a specific student
+        // Fetch that student's data
+        const studentAttendance = await Attendance.find({ userId: targetStudentId });
+        const studentMarks = await Marks.find({ userId: targetStudentId });
+
+        // Build Student Context (Reusing logic from student mode)
+        const specificStudentContext = {
+          role: "teacher_analyzing_student",
+          attendance: studentAttendance.map(a => ({
+            subject: a.subject,
+            attended: a.attendedClasses,
+            total: a.totalClasses,
+            percentage: a.totalClasses > 0 ? Math.round((a.attendedClasses / a.totalClasses) * 100) : 0,
+            classesNeededFor75: classesNeeded(a.attendedClasses, a.totalClasses, 75)
+          })),
+          marks: studentMarks.map(m => ({
+            subject: m.subject,
+            obtained: m.marksObtained,
+            total: m.totalMarks,
+            percentage: m.totalMarks > 0 ? Math.round((m.marksObtained / m.totalMarks) * 100) : 0
+          })),
+          predictionModels: predictionModels
+        };
+
+        studentContext = specificStudentContext;
+
+        systemInstruction = `
+          You are an expert Teaching Assistant.
+          You are analyzing a specific student ID: ${targetStudentId} for a teacher.
+          
+          Here is the student's data (same structure as student view):
+          ${JSON.stringify(studentContext, null, 2)}
+          
+          Teacher's Query: "${message}"
+          
+          Instructions:
+          1. Answer the teacher's questions about THIS student's performance.
+          2. Use the same detailed analysis as you would for a student (predict grades, suggest improvements).
+          3. Be objective and professional.
+          4. **Predictive Performance**:
+             - Use the provided 'predictionModels' to estimate future grades if asked.
+             - Do NOT show formulas.
+        `;
+      } else {
+        // General Class Overview (No student selected)
+        studentContext = {
+          role: "teacher_class_overview",
+          classSummary: {
+            totalStudents,
+            avgClassAttendance: `${avgClassAttendance}%`,
+            avgClassMarks: `${avgClassMarks}%`,
+            totalAttendanceRecords: allAttendance.length,
+            totalMarksRecords: allMarks.length
           }
-        });
-      }
-    }
-    // Check for marks-related queries
-    else if (messageLower.includes("marks") || messageLower.includes("grade") || messageLower.includes("score")) {
-      if (marksData.length === 0) {
-        reply = "No marks data available yet.";
-      } else {
-        const totalMarks = marksData.reduce((sum, m) => sum + m.marksObtained, 0);
-        const totalPossible = marksData.reduce((sum, m) => sum + m.totalMarks, 0);
-        const averagePercentage =
-          totalPossible > 0 ? (totalMarks / totalPossible) * 100 : 0;
+        };
 
-        reply = `Your average marks: ${Math.round(averagePercentage * 100) / 100}%\n\n`;
-        reply += "Subject-wise marks:\n";
-        marksData.forEach((item) => {
-          const percentage =
-            item.totalMarks > 0
-              ? (item.marksObtained / item.totalMarks) * 100
-              : 0;
-          reply += `• ${item.subject}: ${item.marksObtained}/${item.totalMarks} (${Math.round(percentage * 100) / 100}%)\n`;
-        });
+        systemInstruction = `
+          You are an expert Teaching Assistant and Data Analyst.
+          You are speaking to a TEACHER about the WHOLE CLASS.
+          
+          Here is the overview of the entire class:
+          ${JSON.stringify(studentContext, null, 2)}
+          
+          Teacher's Query: "${message}"
+          
+          Instructions:
+          1. Answer questions about class performance.
+          2. If they ask for specific student details, ask them to "Select a student" in the dashboard first.
+          3. Provide insights on class averages.
+        `;
       }
-    }
-    // Check for subjects below 75% marks
-    else if (messageLower.includes("below") && messageLower.includes("75")) {
-      const subjectsBelow75 = marksData
-        .map((item) => {
-          const percentage =
-            item.totalMarks > 0
-              ? (item.marksObtained / item.totalMarks) * 100
-              : 0;
-          return {
-            subject: item.subject,
-            percentage: Math.round(percentage * 100) / 100,
-            marks: item.marksObtained,
-            total: item.totalMarks,
-          };
-        })
-        .filter((item) => item.percentage < 75);
 
-      if (subjectsBelow75.length > 0) {
-        reply = "Subjects below 75% marks:\n";
-        subjectsBelow75.forEach((item) => {
-          reply += `• ${item.subject}: ${item.percentage}% (${item.marks}/${item.total})\n`;
-        });
-      } else {
-        reply = "Great! All your subjects have 75% or higher marks.";
-      }
     }
-    // Generic help message
+    // ---------------------------------------------------------
+    // 👨‍🎓 STUDENT MODE
+    // ---------------------------------------------------------
     else {
-      reply =
-        "I can help you with:\n" +
-        "• Attendance queries: 'How many classes do I need in [subject] to reach 75%?'\n" +
-        "• Marks queries: 'What's my average marks?' or 'Which subjects are below 75%?'\n" +
-        "• General: 'Which subjects are below 75% attendance?'\n\n" +
-        "Try asking me about your attendance or marks!";
+      studentContext = {
+        role: "student",
+        attendance: attendanceData.map(a => ({
+          subject: a.subject,
+          attended: a.attendedClasses,
+          total: a.totalClasses,
+          percentage: a.totalClasses > 0 ? Math.round((a.attendedClasses / a.totalClasses) * 100) : 0,
+          classesNeededFor75: classesNeeded(a.attendedClasses, a.totalClasses, 75)
+        })),
+        marks: marksData.map(m => ({
+          subject: m.subject,
+          obtained: m.marksObtained,
+          total: m.totalMarks,
+          percentage: m.totalMarks > 0 ? Math.round((m.marksObtained / m.totalMarks) * 100) : 0
+        })),
+        // Feed the regression models to the AI
+        predictionModels: predictionModels
+      };
+
+      systemInstruction = `
+        You are an intelligent and helpful academic assistant for a student.
+        
+        Here is the student's current academic data and Predictive Models:
+        ${JSON.stringify(studentContext, null, 2)}
+  
+        Student's Query: "${message}"
+  
+        Instructions:
+        1. Analyze the student's data to answer their query accurately.
+        2. If they ask about attendance, mention their current percentage and how many classes they need to attend (if applicable) to reach 75%.
+        3. If they ask about marks, provide their scores and averages.
+        4. **Predictive Performance**:
+           - You possess linear regression models in 'predictionModels' for various subjects (slope & intercept).
+           - If the student asks to "predict my grade", "what will I score", or "how to improve" for a specific subject:
+              a. Find the matching Subject in the student's Attendance data.
+              b. Use the formula: Estimated Final Grade = (slope * current_attendance_percentage) + intercept.
+              c. Calculate it. Clamp the result between 0 and 100.
+              d. Present the *Predicted Grade* clearly.
+              e. Also calculate the "Insight": What if they increase attendance by 10%? (Use same formula with current_attendance + 10). Tell them the potential gain.
+           - If the subject is not found in 'predictionModels', politely say you don't have enough historical data for that subject yet.
+        5. Be encouraging and constructive.
+        6. **IMPORTANT OUTPUT RULE**: Do NOT show the internal formula (slope/intercept) or the mathematical calculation steps in your response. Just state the final result naturally. 
+           - BAD: "Your grade is calculated as (0.8 * 50) + 10 = 50."
+           - GOOD: "Based on your current attendance, your predicted grade is approximately 50%."
+        7. Keep the response concise, natural, and conversational. Do not use markdown tables, use bullet points if listing items.
+        8. If the query is unrelated to their data (e.g., "Hello", "Who are you"), respond politely as an AI assistant.
+      `;
     }
 
-    return res.json({ reply });
+    // Generate response using Gemini
+    // Using gemini-2.0-flash as it is available for this key
+    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+    const result = await model.generateContent(systemInstruction);
+    const response = await result.response;
+    const text = response.text();
+
+    return res.json({ reply: text });
+
   } catch (error) {
     console.error("Chatbot error:", error);
-    return res.status(500).json({ message: "Internal server error" });
+    return res.status(500).json({
+      reply: "I'm having trouble thinking right now. Please try again later."
+    });
   }
 });
 
 export default router;
-
-

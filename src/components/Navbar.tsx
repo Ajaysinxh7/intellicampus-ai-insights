@@ -7,13 +7,8 @@ const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
 
   const navLinks = [
-    { to: "/", label: "Home" },
-    { to: "/features", label: "Features" },
-    { to: "/architecture", label: "Architecture" },
-    { to: "/api", label: "API Docs" },
-    { to: "/ml-design", label: "ML Design" },
-    { to: "/demo", label: "Demo" },
-    { to: "/contact", label: "Contact" },
+    // { to: "/", label: "Home" },
+    // { to: "/demo", label: "Demo" },
   ];
 
   return (

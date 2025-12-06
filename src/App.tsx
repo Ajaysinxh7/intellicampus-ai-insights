@@ -25,11 +25,32 @@ import RoleRoute from "./auth/RoleRoute";
 import Login from "./pages/Login";
 import StudentPanel from "./pages/StudentPanel";
 import TeacherPanel from "./pages/TeacherPanel";
+import TeacherRiskDashboard from "./pages/TeacherRiskDashboard";
 import AdminPanel from "./pages/AdminPanel";
+
+import { useEffect } from "react";
+
+const GlobalReloadWarning = () => {
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      // Standard way to trigger the dialog
+      e.preventDefault();
+      // Chrome requires returnValue to be set
+      e.returnValue = "You will be logged out if you reload. Are you sure?";
+      return "You will be logged out if you reload. Are you sure?";
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, []);
+
+  return null;
+};
 
 const App = () => (
   // ⭐ ADDED AuthProvider (wraps whole app)
   <AuthProvider>
+    <GlobalReloadWarning />
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <Toaster />
@@ -75,6 +96,16 @@ const App = () => (
                     <PrivateRoute>
                       <RoleRoute role="teacher">
                         <TeacherPanel />
+                      </RoleRoute>
+                    </PrivateRoute>
+                  }
+                />
+                <Route
+                  path="/teacher/risk"
+                  element={
+                    <PrivateRoute>
+                      <RoleRoute role="teacher">
+                        <TeacherRiskDashboard />
                       </RoleRoute>
                     </PrivateRoute>
                   }

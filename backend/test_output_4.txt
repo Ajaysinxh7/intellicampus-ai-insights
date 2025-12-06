@@ -1,0 +1,25 @@
+D:\MinorProject\intellicampus-ai-insights\backend\node_modules\ts-node\src\index.ts:859
+    return new TSError(diagnosticText, diagnosticCodes, diagnostics);
+           ^
+TSError: Γ¿» Unable to compile TypeScript:
+src/test_gemini.ts(14,9): error TS2349: This expression is not callable.
+  Type 'String' has no call signatures.
+src/test_gemini.ts(51,24): error TS2581: Cannot find name '$'. Do you need to install type definitions for jQuery? Try `npm i --save-dev @types/jquery`.
+src/test_gemini.ts(51,27): error TS2304: Cannot find name 'model'.
+src/test_gemini.ts(51,40): error TS2349: This expression is not callable.
+  Type 'String' has no call signatures.
+src/test_gemini.ts(51,25): error TS1005: ';' expected.
+src/test_gemini.ts(60,1): error TS1005: '}' expected.
+
+    at createTSError (D:\MinorProject\intellicampus-ai-insights\backend\node_modules\ts-node\src\index.ts:859:12)
+    at reportTSError (D:\MinorProject\intellicampus-ai-insights\backend\node_modules\ts-node\src\index.ts:863:19)
+    at getOutput (D:\MinorProject\intellicampus-ai-insights\backend\node_modules\ts-node\src\index.ts:1077:36)
+    at Object.compile (D:\MinorProject\intellicampus-ai-insights\backend\node_modules\ts-node\src\index.ts:1433:41)
+    at Module.m._compile (D:\MinorProject\intellicampus-ai-insights\backend\node_modules\ts-node\src\index.ts:1617:30)
+    at node:internal/modules/cjs/loader:1893:10
+    at Object.require.extensions.<computed> [as .ts] (D:\MinorProject\intellicampus-ai-insights\backend\node_modules\ts-node\src\index.ts:1621:12)
+    at Module.load (node:internal/modules/cjs/loader:1480:32)
+    at Module._load (node:internal/modules/cjs/loader:1299:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14) {
+  diagnosticCodes: [ 2349, 2581, 2304, 2349, 1005, 1005 ]
+}
