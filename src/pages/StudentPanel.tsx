@@ -64,6 +64,17 @@ const StudentPanel: React.FC = () => {
   });
   const [saveLoading, setSaveLoading] = useState(false);
 
+  // Password Change State
+  const [isChangePasswordMode, setIsChangePasswordMode] = useState(false);
+  const [passwordData, setPasswordData] = useState({
+    oldPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
+  const [passwordLoading, setPasswordLoading] = useState(false);
+  const [passwordError, setPasswordError] = useState("");
+  const [passwordSuccess, setPasswordSuccess] = useState("");
+
   useEffect(() => {
     if (user?.id) {
       fetchData();
@@ -157,6 +168,38 @@ const StudentPanel: React.FC = () => {
       console.error("Failed to submit profile request", error);
     } finally {
       setSaveLoading(false);
+    }
+  };
+
+  const handlePasswordSubmit = async () => {
+    setPasswordError("");
+    setPasswordSuccess("");
+
+    if (!passwordData.oldPassword || !passwordData.newPassword || !passwordData.confirmPassword) {
+      setPasswordError("All fields are required");
+      return;
+    }
+
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      setPasswordError("New passwords do not match");
+      return;
+    }
+
+    setPasswordLoading(true);
+    try {
+      await api.post("/change-password", {
+        oldPassword: passwordData.oldPassword,
+        newPassword: passwordData.newPassword
+      });
+      setPasswordSuccess("Password changed successfully! Logging out...");
+      setTimeout(() => {
+        auth.logout();
+      }, 1500);
+    } catch (err: any) {
+      console.error("Password change failed", err);
+      setPasswordError(err.response?.data?.message || "Failed to change password");
+    } finally {
+      setPasswordLoading(false);
     }
   };
 
@@ -391,12 +434,13 @@ const StudentPanel: React.FC = () => {
             <div className="bg-white dark:bg-[#1a1f3c] border border-slate-200 dark:border-white/10 rounded-2xl w-full max-w-lg shadow-2xl animate-in fade-in zoom-in duration-300">
               <div className="p-6 border-b border-slate-200 dark:border-white/10 flex justify-between items-center bg-gradient-to-r from-primary/10 to-transparent rounded-t-2xl">
                 <h2 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                  👤 Student Profile
+                  {isChangePasswordMode ? "🔒 Change Password" : "👤 Student Profile"}
                 </h2>
                 <button
                   onClick={() => {
                     setIsProfileOpen(false);
                     setIsRequestMode(false);
+                    setIsChangePasswordMode(false);
                   }}
                   className="text-slate-400 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white transition-colors"
                 >
@@ -417,98 +461,192 @@ const StudentPanel: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
+                {isChangePasswordMode ? (
+                  <div className="space-y-4">
                     <div className="space-y-2">
-                      <label className="text-xs font-medium text-slate-500 dark:text-gray-400 uppercase tracking-wider">Name</label>
+                      <label className="text-xs font-medium text-slate-500 dark:text-gray-400 uppercase tracking-wider">Current Password</label>
                       <input
-                        type="text"
-                        value={profileData.name}
-                        readOnly
-                        className="w-full bg-slate-100 dark:bg-black/30 border border-slate-300 dark:border-white/10 rounded-lg px-4 py-3 text-slate-400 dark:text-gray-300 cursor-not-allowed focus:outline-none"
-                      />
-                      <p className="text-[10px] text-slate-500 dark:text-gray-600 pl-1">* Name cannot be changed</p>
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-xs font-medium text-slate-500 dark:text-gray-400 uppercase tracking-wider">Enrollment No.</label>
-                      <input
-                        type="text"
-                        value={isRequestMode ? requestData.enrollmentNumber : profileData.enrollmentNumber}
-                        onChange={(e) => setRequestData({ ...requestData, enrollmentNumber: e.target.value })}
-                        readOnly={!isRequestMode}
-                        placeholder="Not set"
-                        className={`w-full bg-slate-50 dark:bg-black/20 border ${isRequestMode ? "border-primary/50 focus:border-primary bg-slate-100 dark:bg-black/40" : "border-slate-200 dark:border-white/5 border-transparent"} rounded-lg px-4 py-3 text-slate-900 dark:text-white focus:outline-none transition-all`}
+                        type="password"
+                        value={passwordData.oldPassword}
+                        onChange={(e) => setPasswordData({ ...passwordData, oldPassword: e.target.value })}
+                        className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/5 focus:border-primary/50 focus:bg-white dark:focus:bg-black/40 rounded-lg px-4 py-3 text-slate-900 dark:text-white focus:outline-none transition-all"
+                        placeholder="Enter current password"
                       />
                     </div>
-                  </div>
+                    <div className="space-y-2">
+                      <label className="text-xs font-medium text-slate-500 dark:text-gray-400 uppercase tracking-wider">New Password</label>
+                      <input
+                        type="password"
+                        value={passwordData.newPassword}
+                        onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
+                        className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/5 focus:border-primary/50 focus:bg-white dark:focus:bg-black/40 rounded-lg px-4 py-3 text-slate-900 dark:text-white focus:outline-none transition-all"
+                        placeholder="Enter new password"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-xs font-medium text-slate-500 dark:text-gray-400 uppercase tracking-wider">Confirm New Password</label>
+                      <input
+                        type="password"
+                        value={passwordData.confirmPassword}
+                        onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
+                        className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/5 focus:border-primary/50 focus:bg-white dark:focus:bg-black/40 rounded-lg px-4 py-3 text-slate-900 dark:text-white focus:outline-none transition-all"
+                        placeholder="Confirm new password"
+                      />
+                    </div>
 
-                  <div className="space-y-2">
-                    <label className="text-xs font-medium text-slate-500 dark:text-gray-400 uppercase tracking-wider">Branch</label>
-                    <input
-                      type="text"
-                      value={isRequestMode ? requestData.branch : profileData.branch}
-                      onChange={(e) => setRequestData({ ...requestData, branch: e.target.value })}
-                      readOnly={!isRequestMode}
-                      placeholder="Not set"
-                      className={`w-full bg-slate-50 dark:bg-black/20 border ${isRequestMode ? "border-primary/50 focus:border-primary bg-slate-100 dark:bg-black/40" : "border-slate-200 dark:border-white/5 border-transparent"} rounded-lg px-4 py-3 text-slate-900 dark:text-white focus:outline-none transition-all`}
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="text-xs font-medium text-slate-500 dark:text-gray-400 uppercase tracking-wider">College Name</label>
-                    <input
-                      type="text"
-                      value={isRequestMode ? requestData.collegeName : profileData.collegeName}
-                      onChange={(e) => setRequestData({ ...requestData, collegeName: e.target.value })}
-                      readOnly={!isRequestMode}
-                      placeholder="Not set"
-                      className={`w-full bg-slate-50 dark:bg-black/20 border ${isRequestMode ? "border-primary/50 focus:border-primary bg-slate-100 dark:bg-black/40" : "border-slate-200 dark:border-white/5 border-transparent"} rounded-lg px-4 py-3 text-slate-900 dark:text-white focus:outline-none transition-all`}
-                    />
-                  </div>
-                </div>
-
-                {/* Action Buttons */}
-                <div className="flex gap-3 pt-2">
-                  {!isRequestMode ? (
-                    hasPendingRequest ? (
-                      <div className="w-full bg-yellow-500/10 border border-yellow-500/20 text-yellow-600 dark:text-yellow-500 px-4 py-3 rounded-lg text-center font-medium">
-                        Change Request Pending
+                    {passwordError && (
+                      <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-600 dark:text-red-400 text-sm">
+                        {passwordError}
                       </div>
-                    ) : (
+                    )}
+                    {passwordSuccess && (
+                      <div className="p-3 bg-green-500/10 border border-green-500/20 rounded-lg text-green-600 dark:text-green-400 text-sm">
+                        {passwordSuccess}
+                      </div>
+                    )}
+
+                    <div className="flex gap-3 pt-2">
                       <button
                         onClick={() => {
-                          setIsRequestMode(true);
+                          setIsChangePasswordMode(false);
+                          setPasswordError("");
+                          setPasswordSuccess("");
                         }}
-                        className="flex-1 bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 text-slate-900 dark:text-white font-medium py-3 rounded-lg transition-all"
-                      >
-                        Request Change
-                      </button>
-                    )
-                  ) : (
-                    <>
-                      <button
-                        onClick={() => setIsRequestMode(false)}
                         className="flex-1 bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-900 dark:text-white font-medium py-3 rounded-lg transition-all"
                       >
                         Cancel
                       </button>
                       <button
-                        onClick={handleSubmitRequest}
-                        disabled={saveLoading}
+                        onClick={handlePasswordSubmit}
+                        disabled={passwordLoading}
                         className="flex-1 bg-primary hover:bg-primary/90 text-white font-bold py-3 rounded-lg transition-all flex items-center justify-center gap-2"
                       >
-                        {saveLoading ? (
+                        {passwordLoading ? (
                           <>
                             <div className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                            Submitting...
+                            Updating...
                           </>
                         ) : (
-                          "Submit Request"
+                          "Update Password"
                         )}
                       </button>
-                    </>
-                  )}
-                </div>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <label className="text-xs font-medium text-slate-500 dark:text-gray-400 uppercase tracking-wider">Name</label>
+                          <input
+                            type="text"
+                            value={profileData.name}
+                            readOnly
+                            className="w-full bg-slate-100 dark:bg-black/30 border border-slate-300 dark:border-white/10 rounded-lg px-4 py-3 text-slate-400 dark:text-gray-300 cursor-not-allowed focus:outline-none"
+                          />
+                          <p className="text-[10px] text-slate-500 dark:text-gray-600 pl-1">* Name cannot be changed</p>
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-xs font-medium text-slate-500 dark:text-gray-400 uppercase tracking-wider">Enrollment No.</label>
+                          <input
+                            type="text"
+                            value={isRequestMode ? requestData.enrollmentNumber : profileData.enrollmentNumber}
+                            onChange={(e) => setRequestData({ ...requestData, enrollmentNumber: e.target.value })}
+                            readOnly={!isRequestMode}
+                            placeholder="Not set"
+                            className={`w-full bg-slate-50 dark:bg-black/20 border ${isRequestMode ? "border-primary/50 focus:border-primary bg-slate-100 dark:bg-black/40" : "border-slate-200 dark:border-white/5 border-transparent"} rounded-lg px-4 py-3 text-slate-900 dark:text-white focus:outline-none transition-all`}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="text-xs font-medium text-slate-500 dark:text-gray-400 uppercase tracking-wider">Branch</label>
+                        <input
+                          type="text"
+                          value={isRequestMode ? requestData.branch : profileData.branch}
+                          onChange={(e) => setRequestData({ ...requestData, branch: e.target.value })}
+                          readOnly={!isRequestMode}
+                          placeholder="Not set"
+                          className={`w-full bg-slate-50 dark:bg-black/20 border ${isRequestMode ? "border-primary/50 focus:border-primary bg-slate-100 dark:bg-black/40" : "border-slate-200 dark:border-white/5 border-transparent"} rounded-lg px-4 py-3 text-slate-900 dark:text-white focus:outline-none transition-all`}
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="text-xs font-medium text-slate-500 dark:text-gray-400 uppercase tracking-wider">College Name</label>
+                        <input
+                          type="text"
+                          value={isRequestMode ? requestData.collegeName : profileData.collegeName}
+                          onChange={(e) => setRequestData({ ...requestData, collegeName: e.target.value })}
+                          readOnly={!isRequestMode}
+                          placeholder="Not set"
+                          className={`w-full bg-slate-50 dark:bg-black/20 border ${isRequestMode ? "border-primary/50 focus:border-primary bg-slate-100 dark:bg-black/40" : "border-slate-200 dark:border-white/5 border-transparent"} rounded-lg px-4 py-3 text-slate-900 dark:text-white focus:outline-none transition-all`}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="flex flex-col gap-3 pt-2">
+                      {!isRequestMode ? (
+                        <>
+                          {hasPendingRequest ? (
+                            <div className="w-full bg-yellow-500/10 border border-yellow-500/20 text-yellow-600 dark:text-yellow-500 px-4 py-3 rounded-lg text-center font-medium">
+                              Change Request Pending
+                            </div>
+                          ) : (
+                            <div className="flex gap-3">
+                              <button
+                                onClick={() => {
+                                  setIsRequestMode(true);
+                                }}
+                                className="flex-1 bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 text-slate-900 dark:text-white font-medium py-3 rounded-lg transition-all"
+                              >
+                                Request Change
+                              </button>
+                              <button
+                                onClick={() => setIsChangePasswordMode(true)}
+                                className="flex-1 bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-900 dark:text-white font-medium py-3 rounded-lg transition-all"
+                              >
+                                Change Password
+                              </button>
+                            </div>
+                          )}
+                          {hasPendingRequest && (
+                            <button
+                              onClick={() => setIsChangePasswordMode(true)}
+                              className="w-full bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-900 dark:text-white font-medium py-3 rounded-lg transition-all"
+                            >
+                              Change Password
+                            </button>
+                          )}
+                        </>
+                      ) : (
+                        <div className="flex gap-3">
+                          <button
+                            onClick={() => setIsRequestMode(false)}
+                            className="flex-1 bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-900 dark:text-white font-medium py-3 rounded-lg transition-all"
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            onClick={handleSubmitRequest}
+                            disabled={saveLoading}
+                            className="flex-1 bg-primary hover:bg-primary/90 text-white font-bold py-3 rounded-lg transition-all flex items-center justify-center gap-2"
+                          >
+                            {saveLoading ? (
+                              <>
+                                <div className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                Submitting...
+                              </>
+                            ) : (
+                              "Submit Request"
+                            )}
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           </div>

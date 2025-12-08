@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import User from "../models/User"; // your mongoose model
 import { generateAccessToken, generateRefreshToken } from "../utils/generateTokens";
+import { verifyAccessToken } from "../middleware/auth";
 
 const router = Router();
 
@@ -96,6 +97,36 @@ router.post("/refresh-token", async (req: Request, res: Response) => {
   } catch (error) {
     console.error("Refresh token error:", error);
     return res.status(403).json({ message: "Invalid Refresh Token" });
+  }
+});
+
+router.post("/change-password", verifyAccessToken, async (req: Request, res: Response) => {
+  try {
+    const { oldPassword, newPassword } = req.body;
+    const userId = (req as any).user.userId;
+
+    if (!oldPassword || !newPassword) {
+      return res.status(400).json({ message: "Old and new passwords are required" });
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const isMatch = await bcrypt.compare(oldPassword, user.password);
+    if (!isMatch) {
+      return res.status(401).json({ message: "Incorrect old password" });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    user.password = hashedPassword;
+    await user.save();
+
+    res.json({ message: "Password updated successfully" });
+  } catch (error) {
+    console.error("Change password error:", error);
+    res.status(500).json({ message: "Internal server error" });
   }
 });
 
