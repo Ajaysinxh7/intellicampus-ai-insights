@@ -1,5 +1,5 @@
-import { NavLink } from "react-router-dom";
-import { Brain, Menu, X, Sun, Moon } from "lucide-react";
+import { NavLink, useNavigate } from "react-router-dom";
+import { Brain, Menu, X, Sun, Moon, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { useTheme } from "@/components/theme-provider";
@@ -7,6 +7,7 @@ import { useTheme } from "@/components/theme-provider";
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const { theme, setTheme } = useTheme();
+  const navigate = useNavigate();
 
   const navLinks = [
     // { to: "/", label: "Home" },
@@ -17,6 +18,25 @@ const Navbar = () => {
     <nav className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto px-4">
         <div className="relative flex h-16 items-center justify-between">
+          <div className="flex items-center gap-1 md:gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => navigate(-1)}
+              className="hover:bg-primary/10 transition-colors"
+            >
+              <ChevronLeft className="h-5 w-5" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => navigate(1)}
+              className="hover:bg-primary/10 transition-colors"
+            >
+              <ChevronRight className="h-5 w-5" />
+            </Button>
+          </div>
+
           <NavLink
             to="/"
             onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}

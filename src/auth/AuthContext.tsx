@@ -4,6 +4,7 @@ import React, {
     useState,
     useEffect,
 } from "react";
+import { useNavigate } from "react-router-dom";
 import api from "../api/axios";
 
 // ----------------------------
@@ -27,6 +28,7 @@ export interface AuthContextType {
     user: User | null;
     login: (email: string, password: string) => Promise<User>;
     logout: () => void;
+    loading: boolean;
 }
 
 // Provider props type
@@ -44,6 +46,8 @@ export const AuthContext = createContext<AuthContextType | null>(null);
 // ----------------------------
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const [user, setUser] = useState<User | null>(null);
+    const [loading, setLoading] = useState<boolean>(true);
+    const navigate = useNavigate();
 
     // ----------------------------
     // ⭐ Login
@@ -73,7 +77,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         localStorage.removeItem("accessToken");
         localStorage.removeItem("user");
         setUser(null);
-        window.location.href = "/login";
+        navigate("/login", { replace: true });
     };
 
     // ----------------------------
@@ -97,10 +101,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                 collegeName: parsed.collegeName,
             });
         }
+
+        setLoading(false);
     }, []);
 
     return (
-        <AuthContext.Provider value={{ user, login, logout }}>
+        <AuthContext.Provider value={{ user, login, logout, loading }}>
             {children}
         </AuthContext.Provider>
     );

@@ -54,14 +54,14 @@ const GlobalReloadWarning = () => {
 
 const App = () => (
   // ⭐ ADDED AuthProvider (wraps whole app)
-  <AuthProvider>
-    <GlobalReloadWarning />
-    <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
-      <QueryClientProvider client={queryClient}>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
+  <BrowserRouter>
+    <AuthProvider>
+      <GlobalReloadWarning />
+      <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+        <QueryClientProvider client={queryClient}>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
             <div className="flex flex-col min-h-screen">
               <Navbar />
               <main className="flex-1 flex flex-col">
@@ -140,11 +140,11 @@ const App = () => (
               </main>
               <Footer />
             </div>
-          </BrowserRouter>
-        </TooltipProvider>
-      </QueryClientProvider>
-    </ThemeProvider>
-  </AuthProvider>
+          </TooltipProvider>
+        </QueryClientProvider>
+      </ThemeProvider>
+    </AuthProvider>
+  </BrowserRouter>
 );
 
 export default App;

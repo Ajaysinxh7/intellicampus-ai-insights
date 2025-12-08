@@ -1,5 +1,5 @@
 
-import { useState, useContext, FormEvent } from "react";
+import { useState, useContext, FormEvent, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../auth/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -21,6 +21,22 @@ const Login: React.FC = () => {
     const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState("");
 
+    // Redirect if already logged in
+    useEffect(() => {
+        if (!auth.loading && auth.user) {
+            const { role } = auth.user;
+            if (role === "student") {
+                navigate("/student", { replace: true });
+            } else if (role === "teacher") {
+                navigate("/teacher", { replace: true });
+            } else if (role === "admin") {
+                navigate("/admin", { replace: true });
+            } else {
+                navigate("/", { replace: true });
+            }
+        }
+    }, [auth.user, auth.loading, navigate]);
+
     const submit = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         setLoading(true);
@@ -31,13 +47,13 @@ const Login: React.FC = () => {
             const loggedInUser = await login(email, password);
 
             if (loggedInUser.role === "student") {
-                navigate("/student");
+                navigate("/student", { replace: true });
             } else if (loggedInUser.role === "teacher") {
-                navigate("/teacher");
+                navigate("/teacher", { replace: true });
             } else if (loggedInUser.role === "admin") {
-                navigate("/admin");
+                navigate("/admin", { replace: true });
             } else {
-                navigate("/");
+                navigate("/", { replace: true });
             }
         } catch (err) {
             setError("Invalid credentials. Please try again.");

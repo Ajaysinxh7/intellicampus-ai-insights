@@ -244,7 +244,7 @@ router.post("/", verifyAccessToken, async (req: Request, res: Response) => {
 
     // Generate response using Gemini
     // Using gemini-2.0-flash as it is available for this key
-    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
     const result = await model.generateContent(systemInstruction);
     const response = await result.response;
     const text = response.text();
