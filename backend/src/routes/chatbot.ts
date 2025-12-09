@@ -108,12 +108,19 @@ router.post("/", verifyAccessToken, async (req: Request, res: Response) => {
       if (targetStudentId) {
         // Teacher is asking about a specific student
         // Fetch that student's data
+        // Fetch that student's data and profile
         const studentAttendance = await Attendance.find({ userId: targetStudentId });
         const studentMarks = await Marks.find({ userId: targetStudentId });
+        const studentProfile = await (await import("../models/User")).default.findById(targetStudentId);
 
         // Build Student Context (Reusing logic from student mode)
         const specificStudentContext = {
           role: "teacher_analyzing_student",
+          profile: {
+            name: studentProfile?.name || "Unknown Student",
+            email: studentProfile?.email || "N/A",
+            enrollmentNumber: studentProfile?.enrollmentNumber || "N/A"
+          },
           attendance: studentAttendance.map(a => ({
             subject: a.subject,
             attended: a.attendedClasses,
@@ -134,7 +141,7 @@ router.post("/", verifyAccessToken, async (req: Request, res: Response) => {
 
         systemInstruction = `
           You are an expert Teaching Assistant.
-          You are analyzing a specific student ID: ${targetStudentId} for a teacher.
+          You are analyzing student: ${studentProfile?.name || "Unknown"} (ID: ${targetStudentId}) for a teacher.
           
           Here is the student's data (same structure as student view):
           ${JSON.stringify(studentContext, null, 2)}

@@ -66,7 +66,7 @@ const TeacherRiskDashboard: React.FC = () => {
     }
 
     return (
-        <div className="min-h-screen bg-gray-900 p-8">
+        <div className="p-0">
             <div className="max-w-7xl mx-auto space-y-8">
 
                 <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">

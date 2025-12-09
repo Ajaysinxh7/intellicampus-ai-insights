@@ -23,13 +23,13 @@ router.get("/:userId", verifyAccessToken, async (req: Request, res: Response) =>
 
     // Allow access if user is accessing their own data OR if user is teacher/admin
     const canAccess = userId === authenticatedUserId || await isTeacherOrAdmin(authenticatedUserId);
-    
+
     if (!canAccess) {
       return res.status(403).json({ message: "Access denied" });
     }
 
     const marks = await Marks.find({ userId });
-    
+
     // Calculate percentage for each subject
     const marksWithPercentage = marks.map((item) => ({
       _id: item._id,
@@ -60,7 +60,7 @@ router.post("/", verifyAccessToken, async (req: Request, res: Response) => {
 
     // Allow if user is updating their own data OR if user is teacher/admin
     const canUpdate = userId === authenticatedUserId || await isTeacherOrAdmin(authenticatedUserId);
-    
+
     if (!canUpdate) {
       return res.status(403).json({ message: "Access denied" });
     }

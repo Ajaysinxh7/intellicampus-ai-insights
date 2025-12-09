@@ -30,6 +30,7 @@ import TeacherRiskDashboard from "./pages/TeacherRiskDashboard";
 import AdminPanel from "./pages/AdminPanel";
 
 import StudentLayout from "./components/layouts/StudentLayout";
+import TeacherLayout from "./components/layouts/TeacherLayout";
 import AttendancePage from "./pages/student/AttendancePage";
 import MarksPage from "./pages/student/MarksPage";
 
@@ -105,21 +106,14 @@ const App = () => (
                     element={
                       <PrivateRoute>
                         <RoleRoute role="teacher">
-                          <TeacherPanel />
+                          <TeacherLayout />
                         </RoleRoute>
                       </PrivateRoute>
                     }
-                  />
-                  <Route
-                    path="/teacher/risk"
-                    element={
-                      <PrivateRoute>
-                        <RoleRoute role="teacher">
-                          <TeacherRiskDashboard />
-                        </RoleRoute>
-                      </PrivateRoute>
-                    }
-                  />
+                  >
+                    <Route index element={<TeacherPanel />} />
+                    <Route path="risk" element={<TeacherRiskDashboard />} />
+                  </Route>
 
                   {/* ⭐ ADDED – ADMIN ROUTE */}
                   <Route

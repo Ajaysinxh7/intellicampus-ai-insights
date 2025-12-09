@@ -6,6 +6,8 @@ import {
   Line,
   BarChart,
   Bar,
+  AreaChart,
+  Area,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -253,11 +255,11 @@ const StudentPanel: React.FC = () => {
   }
 
   return (
-    <div className="h-full overflow-hidden flex flex-col pb-2 animate-in fade-in duration-500">
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-full">
+    <div className="h-full overflow-y-auto flex flex-col pb-2 animate-in fade-in duration-500">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
 
         {/* Left Column: Header, Profile, Stats, Charts */}
-        <div className="lg:col-span-2 flex flex-col gap-2 h-full overflow-hidden">
+        <div className="lg:col-span-2 flex flex-col gap-2 overflow-hidden">
 
           {/* Top Section: Headers & Stats */}
           <div className="flex-none space-y-2">
@@ -319,8 +321,8 @@ const StudentPanel: React.FC = () => {
             </div>
           </div>
 
-          {/* Charts Section - Flexible Height */}
-          <div className="flex-1 min-h-0 grid grid-cols-1 md:grid-cols-2 gap-2">
+          {/* Charts Section - Fixed Height (Increased to fill space) */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 h-[420px]">
             <div className="bg-white/60 dark:bg-card/40 backdrop-blur-xl border border-slate-200 dark:border-border/40 rounded-xl p-2 shadow-sm flex flex-col h-full">
               <h3 className="text-xs font-semibold text-slate-900 dark:text-white mb-1 flex items-center gap-2 flex-none">
                 <span className="p-1 rounded bg-blue-500/10 text-blue-500">📊</span>
@@ -328,12 +330,34 @@ const StudentPanel: React.FC = () => {
               </h3>
               <div className="flex-1 min-h-0 w-full">
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={attendanceList} margin={{ top: 5, right: 5, left: -25, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(200,200,200,0.2)" vertical={false} />
-                    <XAxis dataKey="subject" stroke="#94a3b8" fontSize={9} tickLine={false} axisLine={false} interval={0} />
-                    <YAxis stroke="#94a3b8" fontSize={9} tickLine={false} axisLine={false} domain={[0, 100]} />
-                    <Tooltip cursor={{ fill: 'transparent' }} contentStyle={{ borderRadius: '8px', fontSize: '12px' }} />
-                    <Bar dataKey="percentage" fill="#3b82f6" radius={[4, 4, 0, 0]} barSize={15} />
+                  <BarChart data={attendanceList} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                    <defs>
+                      <linearGradient id="colorAttendance" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8} />
+                        <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.3} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(200,200,200,0.1)" vertical={false} />
+                    <XAxis dataKey="subject" stroke="#94a3b8" fontSize={10} tickLine={false} axisLine={false} interval={0} dy={10} />
+                    <YAxis stroke="#94a3b8" fontSize={10} tickLine={false} axisLine={false} domain={[0, 100]} />
+                    <Tooltip
+                      cursor={{ fill: 'rgba(59, 130, 246, 0.1)' }}
+                      contentStyle={{
+                        borderRadius: '12px',
+                        border: 'none',
+                        background: 'rgba(255, 255, 255, 0.9)',
+                        boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
+                        fontSize: '12px',
+                        color: '#1e293b'
+                      }}
+                    />
+                    <Bar
+                      dataKey="percentage"
+                      fill="url(#colorAttendance)"
+                      radius={[6, 6, 0, 0]}
+                      barSize={20}
+                      animationDuration={1500}
+                    />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -346,23 +370,48 @@ const StudentPanel: React.FC = () => {
               </h3>
               <div className="flex-1 min-h-0 w-full">
                 <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={marksList} margin={{ top: 5, right: 5, left: -25, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(200,200,200,0.2)" vertical={false} />
-                    <XAxis dataKey="subject" stroke="#94a3b8" fontSize={9} tickLine={false} axisLine={false} interval={0} />
-                    <YAxis stroke="#94a3b8" fontSize={9} tickLine={false} axisLine={false} domain={[0, 100]} />
-                    <Tooltip contentStyle={{ borderRadius: '8px', fontSize: '12px' }} />
-                    <Line type="monotone" dataKey="percentage" stroke="#8b5cf6" strokeWidth={2} dot={{ r: 2 }} activeDot={{ r: 3 }} />
-                  </LineChart>
+                  <AreaChart data={marksList} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                    <defs>
+                      <linearGradient id="colorMarks" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.6} />
+                        <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(200,200,200,0.1)" vertical={false} />
+                    <XAxis dataKey="subject" stroke="#94a3b8" fontSize={10} tickLine={false} axisLine={false} interval={0} dy={10} />
+                    <YAxis stroke="#94a3b8" fontSize={10} tickLine={false} axisLine={false} domain={[0, 100]} />
+                    <Tooltip
+                      contentStyle={{
+                        borderRadius: '12px',
+                        border: 'none',
+                        background: 'rgba(255, 255, 255, 0.9)',
+                        boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
+                        fontSize: '12px',
+                        color: '#1e293b'
+                      }}
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="percentage"
+                      stroke="#8b5cf6"
+                      strokeWidth={3}
+                      fillOpacity={1}
+                      fill="url(#colorMarks)"
+                      dot={{ r: 4, fill: "#8b5cf6", strokeWidth: 2, stroke: "#fff" }}
+                      activeDot={{ r: 6, strokeWidth: 0 }}
+                      animationDuration={1500}
+                    />
+                  </AreaChart>
                 </ResponsiveContainer>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Right Column: AI Chatbot - Full Height */}
-        <div className="lg:col-span-1 h-full">
-          <div className="bg-white/60 dark:bg-card/40 backdrop-blur-xl border border-slate-200 dark:border-border/40 rounded-xl shadow-xl p-4 h-full flex flex-col">
-            <div className="flex items-center gap-3 mb-3 flex-none">
+        {/* Right Column: AI Chatbot - Fixed Height */}
+        <div className="lg:col-span-1">
+          <div className="bg-white/60 dark:bg-card/40 backdrop-blur-xl border border-slate-200 dark:border-border/40 rounded-xl shadow-xl p-4 h-[540px] flex flex-col">
+            <div className="flex items-center gap-3 mb-3 flex-none shrink-0">
               <div className="h-8 w-8 rounded-lg bg-primary/20 flex items-center justify-center text-primary text-lg">
                 🤖
               </div>
@@ -384,10 +433,10 @@ const StudentPanel: React.FC = () => {
               ) : (
                 <div className="space-y-3">
                   {chatHistory.map((chat, index) => (
-                    <div key={index} className={`flex ${chat.type === "user" ? "justify-end" : "justify-start"}`}>
-                      <div className={`max-w-[90%] rounded-xl p-2.5 shadow-sm text-sm ${chat.type === "user"
-                        ? "bg-primary text-primary-foreground rounded-tr-none"
-                        : "bg-white dark:bg-card/80 text-slate-800 dark:text-white border border-slate-200 dark:border-border/20 rounded-tl-none"
+                    <div key={index} className={`flex w-full ${chat.type === "user" ? "justify-end" : "justify-start"}`}>
+                      <div className={`max-w-[85%] rounded-2xl px-4 py-3 shadow-md text-sm ${chat.type === "user"
+                        ? "bg-blue-600 text-white rounded-tr-none"
+                        : "bg-white dark:bg-slate-800 text-slate-800 dark:text-gray-100 border border-slate-200 dark:border-slate-700 rounded-tl-none"
                         }`}>
                         <p className="whitespace-pre-wrap leading-relaxed">{chat.message}</p>
                       </div>
@@ -407,7 +456,7 @@ const StudentPanel: React.FC = () => {
             </div>
 
             {/* Chat Input */}
-            <form onSubmit={handleChatSubmit} className="relative flex-none">
+            <form onSubmit={handleChatSubmit} className="relative flex-none shrink-0 mt-auto">
               <input
                 value={chatMessage}
                 onChange={(e) => setChatMessage(e.target.value)}
